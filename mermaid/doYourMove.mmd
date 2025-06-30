@@ -1,0 +1,100 @@
+sequenceDiagram
+    participant Client
+    participant Router as moveRouter
+    participant JWTAuth
+    participant Validator as validateDoYourMove
+    participant Controller as moveController
+    participant Service as moveService
+    participant GameRepo as gameRepository
+    participant GameDAO as gameDao
+    participant MoveRepo as moveRepository
+    participant MoveDAO as moveDao
+    participant UserRepo as userRepository
+    participant UserDAO as userDao
+    participant ErrorFactory
+    participant JWT
+
+    Client->>Router: POST /game/:gameId/move<br/>(Authorization: Bearer <token>, body: { x, y })
+    Router->>JWTAuth: jwtAuth(req)
+    JWTAuth->>JWT: verify(token, JWT_SECRET)
+    alt auth error
+        JWTAuth-->>Client: 401 Unauthorized + { error, message }
+    else auth OK
+        JWTAuth->>Router: next()
+    end
+
+    Router->>Validator: validateDoYourMove(req)
+    alt validation error
+        Validator-->>Client: 400 Bad Request + { error }
+    else valid input
+        Validator->>Router: next()
+    end
+
+    Router->>Controller: doYourMove(req)
+    Controller->>Service: doYourMove(gameId, playerId, x, y)
+    
+    Service->>GameRepo: getById(gameId)
+    GameRepo->>GameDAO: get(id)
+    GameDAO-->>GameRepo: battle or null
+
+    alt Game not found
+        Service-->>Controller: throw Error('Game not found')
+        Controller-->>Client: 400 Bad Request + { error }
+    else battle exists
+        Service->>Service: verify participant
+        alt not a participant
+            Service-->>Controller: throw Error('Player not part of this game')
+            Controller-->>Client: 400 Bad Request + { error }
+        else is participant
+            Service->>Service: verify no winner
+            alt winner exists
+                Service-->>Controller: throw Error('Game already finished')
+                Controller-->>Client: 400 Bad Request + { error }
+            else no winner
+                Service->>Service: verify turn
+                alt not your turn
+                    Service-->>Controller: throw Error('Not your turn')
+                    Controller-->>Client: 400 Bad Request + { error }
+                else correct turn
+                    Service->>Service: determine gridKey & nextPlayer
+                    Service->>Service: validateCoordinates(grid, x, y)
+                    Service->>Service: applyMove(grid, x, y)
+                    
+                    Service->>MoveRepo: createMove({ gameId, playerId, x, y, result })
+                    MoveRepo->>MoveDAO: createMove(data)
+                    MoveDAO-->>MoveRepo: move
+                    MoveRepo-->>Service: move
+
+                    Service->>UserRepo: getById(playerId)
+                    UserRepo->>UserDAO: get(id)
+                    UserDAO-->>UserRepo: player
+                    Service->>UserRepo: save(player.tokens -= 1)
+                    
+                    Service->>GameRepo: updateGame(battle, { [gridKey]: grid, current_turn_user: nextPlayer })
+                    GameRepo->>GameDAO: update(game, data)
+                    GameDAO-->>GameRepo: updatedBattle
+
+                    alt player wins (checkIfPlayerHasWon)
+                        Service->>GameRepo: updateGame(updatedBattle, { winner_id: playerId, state: 'FINISHED' })
+                        GameRepo->>GameDAO: update(game, data)
+                        
+                        Service->>UserRepo: getById(playerId)
+                        UserRepo->>UserDAO: get(id)
+                        UserDAO-->>UserRepo: winner
+                        Service->>UserRepo: save(winner.score += 1)
+                    end
+
+                    Service->>GameRepo: getById(gameId)
+                    GameRepo->>GameDAO: get(id)
+                    GameDAO-->>Service: refreshedBattle
+
+                    alt opponent is AI & next turn AI
+                        Service->>Service: doAIMove(refreshedBattle)
+                    end
+
+                    Service-->>Controller: move
+                    Controller-->>Client: 200 OK + move
+                end
+            end
+        end
+    end

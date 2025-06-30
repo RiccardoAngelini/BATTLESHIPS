@@ -1,0 +1,82 @@
+sequenceDiagram
+    participant Client
+    participant Router as gameRouter
+    participant JWTAuth
+    participant Validator as validateCreateGame
+    participant Controller as gameController
+    participant Service as gameService
+    participant UserRepo as userRepository
+    participant UserDAO as userDao
+    participant GameRepo as gameRepository
+    participant GameDAO as gameDao
+    participant ErrorFactory
+    participant JWT
+
+    Client->>Router: POST /games (Authorization: Bearer <token>)
+    Router->>JWTAuth: jwtAuth(req)
+    JWTAuth->>JWT: verify(token, JWT_SECRET)
+    alt Missing/malformed Authorization header
+        JWTAuth-->>Client: 401 Unauthorized + { error: 'Missing or malformed Authorization header' }
+    else Invalid token
+        JWTAuth-->>Client: 401 Unauthorized + { error: 'Invalid token', message: err.message }
+    else Valid token
+        JWTAuth->>Router: next()
+    end
+
+    Router->>Validator: validateCreateGame(body)
+    alt Validation failed
+        Validator-->>Client: 400 Bad Request + { errors }
+    else Valid input
+        Validator->>Router: next()
+    end
+
+    Router->>Controller: createGame(req)
+    Controller->>Service: createGameWithGrid(creatorId, grid, boatSizes, boatNumber, opponentEmail, opponent_type)
+
+    Service->>UserRepo: getById(creatorId)
+    UserRepo->>UserDAO: get(id)
+    UserDAO-->>UserRepo: creator or null
+
+    alt Creator not found
+        Service->>ErrorFactory: getError(INTERNAL_SERVER_ERROR)
+        ErrorFactory-->>Service: Error
+        Service-->>Controller: throw Error
+        Controller-->>Client: 500 Internal Server Error + { error }
+    else Creator found
+        alt creator.tokens <= 0.20
+            Service->>ErrorFactory: getError(UNAUTHORIZED)
+            ErrorFactory-->>Service: Error
+            Service-->>Controller: throw Error
+            Controller-->>Client: 401 Unauthorized + { error }
+        else creator.tokens > 0.20
+            alt opponent_type == 'PVP'
+                Service->>UserRepo: getByEmail(opponentEmail)
+                UserRepo->>UserDAO: getByEmail(email)
+                UserDAO-->>UserRepo: opponent or null
+
+                alt Opponent not found
+                    Service->>ErrorFactory: getError(INTERNAL_SERVER_ERROR)
+                    ErrorFactory-->>Service: Error
+                    Service-->>Controller: throw Error
+                    Controller-->>Client: 500 Internal Server Error + { error }
+                else Opponent found
+                    Service->>GameRepo: createGame(data)
+                    GameRepo->>GameDAO: create(data)
+                    GameDAO-->>GameRepo: battle
+
+                    Service->>UserRepo: save(creator)
+                    Service->>UserRepo: save(opponent)
+                    Service-->>Controller: battle
+                    Controller-->>Client: 200 OK + { battle }
+                end
+            else opponent_type != 'PVP'
+                Service->>GameRepo: createGame(data)
+                GameRepo->>GameDAO: create(data)
+                GameDAO-->>GameRepo: battle
+
+                Service->>UserRepo: save(creator)
+                Service-->>Controller: battle
+                Controller-->>Client: 200 OK + { battle }
+            end
+        end
+    end

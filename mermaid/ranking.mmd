@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant Client
+    participant Router as userRouter
+    participant Controller as userController
+    participant Service as userService
+    participant Repository as userRepository
+    participant DAO as userDao
+
+    Client->>Router: GET /ranking
+    Router->>Controller: getRanking(req)
+    Controller->>Service: getRanking()
+    Service->>Repository: getUserRanking()
+    Repository->>DAO: getRanking()
+    DAO-->>Repository: [ { name, score }, … ]
+    Repository-->>Service: ranking
+    Service-->>Controller: ranking
+    Controller-->>Client: 200 OK + ranking

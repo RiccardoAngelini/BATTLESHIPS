@@ -1,0 +1,69 @@
+sequenceDiagram
+    participant Client
+    participant Router as gameRouter
+    participant JWTAuth
+    participant Controller as gameController
+    participant Service as gameService
+    participant GameRepo as gameRepository
+    participant GameDAO as gameDao
+    participant UserRepo as userRepository
+    participant UserDAO as userDao
+
+    Client->>Router: POST /games/:id/abandon (Authorization: Bearer <token>, body: { abandoned })
+    Router->>JWTAuth: jwtAuth(req)
+    JWTAuth->>JWT: verify(token, JWT_SECRET)
+    alt Missing/malformed Authorization header
+        JWTAuth-->>Client: 401 Unauthorized + { error: 'Missing or malformed Authorization header' }
+    else Invalid token
+        JWTAuth-->>Client: 401 Unauthorized + { error: 'Invalid token', message: err.message }
+    else Valid token
+        JWTAuth->>Router: next()
+    end
+
+    Router->>Controller: abandonGame(req)
+    Controller->>Controller: check abandoned field
+    alt abandoned !== 'abandoned'
+        Controller-->>Client: 400 Bad Request + { error: 'You must insert "abandoned" to left the game.' }
+    else abandoned valid
+        Controller->>Service: abandonedGame(gameId, playerId, abandoned)
+
+        Service->>GameRepo: getById(gameId)
+        GameRepo->>GameDAO: get(id)
+        GameDAO-->>GameRepo: battle or null
+
+        alt Game not found
+            Service-->>Controller: throw Error('Game not found')
+            Controller-->>Client: 500 Internal Server Error + { error }
+        else Game found
+            Service->>Service: verify participant
+            alt Player not part of this game
+                Service-->>Controller: throw Error('Player not part of this game')
+                Controller-->>Client: 500 Internal Server Error + { error }
+            else Player is participant
+                Service->>Service: check state and abandoned
+                alt state !== 'ONGOING'
+                    Service-->>Controller: throw Error('Game is already finished')
+                    Controller-->>Client: 500 Internal Server Error + { error }
+                else valid abandon
+                    Service->>Service: compute winnerId
+                    Service->>GameRepo: updateGame(battle, { winner_id, state: 'ABANDONED' })
+                    GameRepo->>GameDAO: update(game, data)
+                    GameDAO-->>GameRepo: updatedBattle
+
+                    alt winnerId exists
+                        Service->>UserRepo: getById(winnerId)
+                        UserRepo->>UserDAO: get(id)
+                        UserDAO-->>UserRepo: winner or null
+
+                        alt winner found
+                            Service->>UserRepo: save(winner)
+                            UserRepo-->>Service: saved winner
+                        end
+                    end
+
+                    Service-->>Controller: updatedBattle
+                    Controller-->>Client: 204 No Content
+                end
+            end
+        end
+    end

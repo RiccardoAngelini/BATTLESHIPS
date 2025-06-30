@@ -1,0 +1,29 @@
+sequenceDiagram
+    participant Client
+    participant Router as userRouter
+    participant Controller as userController
+    participant Service as authService
+    participant Repository as userRepository
+    participant DAO as userDao
+    participant ErrorHandler
+    participant ErrorFactory
+    participant JWT
+
+    Client->>Router: POST /auth/login
+    Router->>Controller: login(req)
+    Controller->>Service: authenticate(email)
+    Service->>Repository: getByEmail(email)
+    Repository->>DAO: getByEmail(email)
+    DAO-->>Repository: user or null
+
+    alt Utente non trovato
+        Service->>ErrorHandler: handle()
+        ErrorHandler->>ErrorFactory: getError(UNAUTHORIZED)
+        ErrorFactory-->>ErrorHandler: Error
+        ErrorHandler-->>Client: 401 Unauthorized
+    else Utente trovato
+        Service->>JWT: sign({ id, email, role }, secret, expiresIn)
+        JWT-->>Service: token
+        Service-->>Controller: token
+        Controller-->>Client: 200 OK + { token }
+    end

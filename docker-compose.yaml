@@ -1,0 +1,35 @@
+services:
+  app: # Nome del servizio principale
+    build: .
+    container_name: my_app
+    ports: 
+      - "3000:3000" 
+    depends_on:
+       db: 
+          condition: service_healthy # App dipende dal servizio db
+    env_file:
+      - .env # Recupera le variabili d'ambiente dal file '.env'
+
+  db:
+    image: postgres:13 #utilizza l'immagine ufficiale di PostgreSQL
+    container_name: postgres_db
+    environment: # Variabili d'ambiente necessarie per configurare il database PostgreSQL, prese dal file '.env'
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      # Volume persistente - I DATI SOPRAVVIVONO SEMPRE
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ] # Checks DB readiness
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+
+# Volume nominato - QUESTO GARANTISCE LA PERSISTENZA
+volumes:
+  postgres_data:
+    driver: local

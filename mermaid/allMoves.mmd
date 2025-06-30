@@ -1,0 +1,24 @@
+sequenceDiagram
+    participant Client
+    participant Router as moveRouter
+    participant Controller as moveController
+    participant Service as moveService
+    participant Repository as moveRepository
+    participant DAO as moveDao
+    participant ErrorFactory
+
+    Client->>Router: GET /game/:gameId/allmoves
+    Router->>Controller: getAllMoves(req)
+    Controller->>Service: getAllMoves(gameId)
+    alt Success
+        Service->>Repository: getAllMoves(gameId)
+        Repository->>DAO: getAllMoves(gameId)
+        DAO-->>Repository: [moves]
+        Repository-->>Service: moves
+        Service-->>Controller: moves
+        Controller-->>Client: 200 OK + moves
+    else Failure
+        Controller->>ErrorFactory: getError(BAD_REQUEST)
+        ErrorFactory-->>Controller: Error
+        Controller-->>Client: 400 Bad Request + { error }
+    end

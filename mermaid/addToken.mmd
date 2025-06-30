@@ -1,0 +1,49 @@
+sequenceDiagram
+    participant Client
+    participant Router as userRouter
+    participant jwtAuth
+    participant validateAddToken
+    participant Controller as userController
+    participant Service as userService
+    participant Repository as userRepository
+    participant DAO as userDao
+    participant ErrorFactory
+    participant JWT
+
+    Client->>Router: POST /tokens (Authorization: Bearer <token>)
+    Router->>jwtAuth: jwtAuth(req)
+    jwtAuth->>JWT: verify(token, JWT_SECRET)
+    alt Missing/malformed Authorization header
+        jwtAuth-->>Client: 401 Unauthorized + { error: 'Missing or malformed Authorization header' }
+    else Invalid token
+        jwtAuth-->>Client: 401 Unauthorized + { error: 'Invalid token', message: err.message }
+    else Valid token
+        jwtAuth->>Router: next()
+    end
+
+    Router->>validateAddToken: validateAddToken(body)
+    alt Validation failed
+        validateAddToken-->>Client: 400 Bad Request + { errors }
+    else Valid input
+        validateAddToken->>Router: next()
+    end
+
+    Router->>Controller: addToken(req)
+    Controller->>Service: addToken(adminId, email, token)
+    Service->>Repository: getById(adminId)
+    Repository->>DAO: get(id)
+    DAO-->>Repository: admin or null
+
+    Service->>Repository: getByEmail(email)
+    Repository->>DAO: getByEmail(email)
+    DAO-->>Repository: player or null
+
+    alt Admin missing or role ≠ 'ADMIN'
+        Service->>ErrorFactory: getError(UNAUTHORIZED)
+        ErrorFactory-->>Service: Error
+        Service-->>Controller: throw Error
+        Controller-->>Client: 401 Unauthorized + { error }
+    else Admin valido
+        Service-->>Controller: player
+        Controller-->>Client: 200 OK + { player }
+    end

@@ -1,0 +1,44 @@
+sequenceDiagram
+    participant Client
+    participant Router as gameRouter
+    participant JWTAuth
+    participant Controller as gameController
+    participant Service as gameService
+    participant GameRepo as gameRepository
+    participant GameDAO as gameDao
+    participant ErrorFactory
+
+    Client->>Router: GET /games/:id/status (Authorization: Bearer <token>)
+    Router->>JWTAuth: jwtAuth(req)
+    JWTAuth->>JWT: verify(token, JWT_SECRET)
+    alt Missing/malformed Authorization header
+        JWTAuth-->>Client: 401 Unauthorized + { error: 'Missing or malformed Authorization header' }
+    else Invalid token
+        JWTAuth-->>Client: 401 Unauthorized + { error: 'Invalid token', message: err.message }
+    else Valid token
+        JWTAuth->>Router: next()
+    end
+
+    Router->>Controller: getStatus(req)
+    Controller->>Service: statusGame(gameId, playerId)
+    Service->>GameRepo: getById(gameId)
+    GameRepo->>GameDAO: get(id)
+    GameDAO-->>GameRepo: battle or null
+
+    alt Game not found
+        Service->>ErrorFactory: getError(INTERNAL_SERVER_ERROR)
+        ErrorFactory-->>Service: Error
+        Service-->>Controller: throw Error
+        Controller-->>Client: 500 Internal Server Error + { error }
+    else Game found
+        Service->>Service: check creator_id/opponent_id
+        alt Player not part of this game
+            Service->>ErrorFactory: getError(INTERNAL_SERVER_ERROR)
+            ErrorFactory-->>Service: Error
+            Service-->>Controller: throw Error
+            Controller-->>Client: 500 Internal Server Error + { error }
+        else Player authorized
+            Service-->>Controller: battle
+            Controller-->>Client: 200 OK + { battle }
+        end
+    end
