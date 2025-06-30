@@ -195,6 +195,299 @@ turnNumber           → Numero del turno (incrementale)
 ![Descrizione dell'immagine](./mermaid/allMoves.svg)
 
 ---
+###  Rotte API
+
+
+### **userRoutes**
+  
+
+| Metodo | Rotta         | Descrizione                                     | Accesso  | Ruolo |
+|--------|---------------|-------------------------------------------------|----------|-------|
+| POST   | /auth/login   | Effettua il login e restituisce un token JWT    | Pubblica | -     |
+| GET    | /players      | Restituisce la lista dei giocatori              | Privata  | USER  |
+| GET    | /ranking      | Restituisce la classifica dei giocatori         | Pubblica | -     |
+| POST   | /tokens       | Aggiunge credito a un utente                    | Privata  | ADMIN |
+
+---
+
+#### POST /auth/login**
+
+Effettua il login di un utente tramite email e restituisce un token <JWT>
+ #### Parametri
+
+| Posizione | Nome  | Tipo   | Descrizione                 |    
+|-----------|-------|--------|---------------------------- |
+| Body      | email | string | Indirizzo email dell’utente |       
+
+
+Esempio di richiesta
+<pre> 
+POST http://localhost:3000/auth/login
+{
+  "email": "email@example.com"
+}
+ </pre>
+ 
+Risposta attesa
+<pre> 
+200 OK
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+ </pre>
+---
+
+#### POST /tokens
+
+Consente a un utente con ruolo `ADMIN` di aggiungere credito (token) a un altro utente tramite email. È necessaria l’autenticazione JWT
+
+ #### Parametri
+| Posizione | Nome  | Tipo   | Descrizione                                 |
+|-----------|-------|--------|---------------------------------------------|
+| Body      | email | string | Email del giocatore a cui assegnare i token |
+| Body      | token | number | Numero di token da aggiungere               |
+
+
+Esempio di richiesta
+
+<pre> 
+POST http://localhost:3000/tokens Headers: Authorization: Bearer <JWT>
+Body: { 
+      "email": "user@example.com", 
+      "token": 5 
+      } 
+</pre>
+
+Risposta attesa
+
+<pre> 200 OK 
+   { 
+   "id": "123", 
+   "name": "Mara", 
+   "email": "mara@example.com", 
+   "role": "user", 
+   "tokens": 10, 
+   "score": 3 
+   } </pre>
+
+---
+
+#### GET /ranking
+
+Esempio di richiesta
+
+<pre> GET http://localhost:3000/ranking </pre>
+
+Risposta attesa
+
+<pre> 200 OK [ { 
+   "id": "1", 
+   "name": "Mara", 
+   "email": "mara@example.com", 
+   "score": 12 }, 
+   { "id": "2", 
+   "name": "Claudia", 
+   "email": "claudia@example.com", 
+   "score": 9 } ] 
+</pre>
+
+---
+ 
+#### **gameRoutes**
+
+| Metodo | Rotta                  | Descrizione                                              | Accesso  | Ruolo |
+|--------|------------------------|----------------------------------------------------------|----------|-------|
+| POST   | /games                 | Crea una nuova partita                                   | Privata  | USER  |
+| GET    | /games/:id/status      | Restituisce lo stato della partita                       | Privata  | USER  |
+| POST   | /games/:id/abandon     | Abbandona la partita                                     | Privata  | USER  |
+
+---
+
+#### POST /games
+Crea una nuova partita specificando la modalità
+ #### Parametri
+
+| Posizione | Nome       | Tipo          | Descrizione                                        |
+|-----------|------------|---------------|----------------------------------------------------|
+| Body      | grid       | number        | Griglia del giocatore che crea la partita          |
+| Body      | boatSizes  | number        | Array con le dimensioni delle barche               |
+| Body      | boatNumber | number        | Numero totale di barche                            |
+| Body      | opponent   | string|null   | Email dell’avversario (solo per PvP)               |
+| Body      | vs         | string        | Tipo di sfida: 'pvp' o 'pvc'                       |
+
+* **Nel caso di PVP**
+Esempio di richiesta 
+<pre> POST http://localhost:3000/games Authorization: Bearer <JWT>
+   Body: { 
+   "grid": 5, 
+   "boatSizes": 2, 
+   "boatNumber": 3, 
+   "opponent": "leo@example.com", 
+   "vs": "PVP" 
+   } </pre>
+Risposta attesa
+
+<pre> 201 CREATED { 
+   "id": "123", 
+   "creatorId": "456", 
+   "opponentId": "789", 
+   "state": "ONGOING", 
+   "gridCreator": { ... }, 
+   "gridOpponent": { ... }, 
+   "currentTurnUser":"456", 
+   "vs": "pvp"
+   } </pre>
+
+* **Nel caso di PVE**
+Esempio di richiesta 
+<pre> POST http://localhost:3000/games Authorization: Bearer <JWT> 
+   Body: { 
+   "grid": 5, 
+   "boatSizes": 2, 
+   "boatNumber": 3, 
+   "opponent": "", 
+   "vs": "PVE" 
+   } </pre>
+Risposta attesa
+
+<pre> 201 CREATED { 
+   "id": "123", 
+   "creatorId": "456", 
+   "opponentId": "", 
+   "state": "ONGOING", 
+   "gridCreator": { ... }, 
+   "gridOpponent": { ... }, 
+   "currentTurnUser": "456", 
+   "vs": "PVE" 
+   } </pre>
+---
+
+#### GET /games/:id/status
+Restituisce lo stato corrente della partita specificata
+ #### Parametri
+| Posizione | Nome | Tipo   | Descrizione                                 |
+|-----------|------|--------|---------------------------------------------|
+| Params    | id   | string | ID della partita di cui recuperare lo stato |
+
+
+Esempio di richiesta 
+<pre> GET http://localhost:3000/games/abc123/status Authorization: Bearer <JWT> </pre>
+
+Risposta attesa **Partita ancora in corso**
+<pre> 200 OK {
+  "battle": {
+    "id": "abc123",
+    "state": "ONGOING",
+    "currentTurnUser": "user456",
+    "winnerId": null, 
+    "gridCreator": { ... },
+    "gridOpponent": { ... }
+  }
+} </pre>
+
+Risposta attesa **Partita terminata**
+<pre> 200 OK {
+  "battle": {
+    "id": "abc123",
+    "state": "FINISHED" or "ABANDONED",
+    "currentTurnUser": "user456",
+    "winnerId": user123, 
+    "gridCreator": { ... },
+    "gridOpponent": { ... }
+  }
+} </pre>
+
+---
+
+#### POST /games/:id/abandon
+Permette a un giocatore di abbandonare volontariamente una partita in corso.
+ #### Parametri
+ Posizione | Nome      | Tipo   | Descrizione                                    |
+|-----------|-----------|--------|-----------------------------------------------|
+| Params    | id        | string | ID della partita da abbandonare               |
+| Body      | abandoned | string | Deve essere la stringa esatta: "abandoned"    |
+
+
+Esempio di richiesta 
+<pre> GET http://localhost:3000/games/abc123/abandon Authorization: Bearer <JWT> 
+{
+  "abandoned": "abandoned"
+}
+</pre>
+Risposta attesa
+<pre> 200 OK </pre>
+
+---
+
+#### **moveRoute**
+  
+| Metodo | Rotta                        | Descrizione                              | Accesso  | Ruolo |
+|--------|------------------------------|------------------------------------------|----------|-------|
+| POST   | /game/:gameId/move           | Esegue una mossa                         | Privata  | USER  |
+| GET    | /game/:gameId/allmoves       | Restituisce tutte le mosse della partita | Privata  | USER  |  
+
+---
+#### POST /game/:id/move
+Permette a un giocatore di effettuare una mossa durante una partita.
+ #### Parametri
+| Posizione | Nome | Tipo   | Descrizione                                 |
+|-----------|------|--------|---------------------------------------------|
+| Params    | id   | string | ID della partita in cui effettuare la mossa |
+| Body      | x    | number | Coordinata X (colonna) della mossa          |
+| Body      | y    | number | Coordinata Y (riga) della mossa             |
+
+Esempio di richiesta 
+<pre> POST http://localhost:3000/game/abc123/move Authorization: Bearer <JWT>
+{
+  "x": 3,
+  "y": 5
+}
+</pre>
+Risposta attesa
+<pre> 200 OK
+{
+  "id": "move456",
+  "gameId": "abc123",
+  "playerId": "user789",
+  "x": 3,
+  "y": 5,
+  "result": "hit",
+  "turnNumber": 4
+} </pre>
+
+---
+#### **GET /game/:id/allmoves
+Restituisce tutte le mosse effettuate nella partita identificata dal relativo ID.
+ #### Parametri
+| Posizione | Nome | Tipo   | Descrizione                                 |
+|-----------|------|--------|---------------------------------------------|
+| Params    | id   | string | ID della partita da cui ottenere le mosse   |
+
+Esempio di richiesta 
+<pre> GET http://localhost:3000/game/abc123/allmoves Authorization: Bearer <JWT> </pre>
+Risposta attesa
+<pre> 200 OK
+[
+  {
+    "id": "move001",
+    "gameId": "abc123",
+    "playerId": "user789",
+    "x": 1,
+    "y": 2,
+    "result": "hit",
+    "turnNumber": 1
+  },
+  {
+    "id": "move002",
+    "gameId": "abc123",
+    "playerId": "user456",
+    "x": 3,
+    "y": 4,
+    "result": "water",
+    "turnNumber": 2
+  }
+] </pre>
+
 ## 👨‍💻 Autore
 
 **Riccardo Angelini**  
