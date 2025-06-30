@@ -9,6 +9,8 @@ Il progetto propone un sistema backend per la gestione del gioco della **battagl
 - **ORM**: Sequelize
 - **Database**: PostgreSQL
 - **Autenticazione**: JWT (JSON Web Tokens)
+- **Strumenti DB**: DBeaver
+  **Containerizzazione**: Docker  
 
 ## Funzionalità principali
 L’utente ha la possibilità di:
