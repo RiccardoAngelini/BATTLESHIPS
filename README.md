@@ -123,7 +123,9 @@ Middleware presenti in Battleships: `adminValidator`, `loginValidator`, `gameVal
 
 ###  Diagramma E-R
 
-![Schema ER](./mermaid/schema-er.png)
+![Schema ER](./mermaid/Diagramma_ER.png)
+
+
 <pre>
  PLAYER
 ---------
@@ -158,17 +160,41 @@ result               → Esito della mossa ('hit', 'miss', 'water)
 turnNumber           → Numero del turno (incrementale)
 </pre>
 
-![Descrizione dell'immagine](./mermaid/login.svg)
+---
+
+
+###  Diagramma delle sequenze
+
+
+<pre> POST /auth/login</pre>
+![POST /auth/login](./mermaid/login.svg)
+
+
+<pre> POST /tokens</pre>
 ![Descrizione dell'immagine](./mermaid/addToken.svg)
+
+
+<pre> GET /ranking</pre>
 ![Descrizione dell'immagine](./mermaid/ranking.svg)
 
+
+<pre> POST /games</pre>
 ![Descrizione dell'immagine](./mermaid/createGame.svg)
+
+
+<pre> GET /games/:id/status</pre>
 ![Descrizione dell'immagine](./mermaid/gameStatus.svg)
+
+<pre> POST /games/:id/abandon</pre>
 ![Descrizione dell'immagine](./mermaid/abandoned.svg)
 
+<pre> POST /game/:id/move</pre>
 ![Descrizione dell'immagine](./mermaid/doYourMove.svg)
+
+<pre> GET /game/:id/allmoves</pre>
 ![Descrizione dell'immagine](./mermaid/allMoves.svg)
 
+---
 ## 👨‍💻 Autore
 
 **Riccardo Angelini**  
