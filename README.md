@@ -444,7 +444,7 @@ Esempio di richiesta
 }
 </pre>
 Risposta attesa
-<pre> 200 OK
+<pre> 201 CREATED
 {
   "id": "move456",
   "gameId": "abc123",
@@ -456,7 +456,7 @@ Risposta attesa
 } </pre>
 
 ---
-#### **GET /game/:id/allmoves
+#### GET /game/:id/allmoves
 Restituisce tutte le mosse effettuate nella partita identificata dal relativo ID.
  #### Parametri
 | Posizione | Nome | Tipo   | Descrizione                                 |
