@@ -94,14 +94,6 @@ Il Repository è un pattern architetturale che introduce un ulteriore livello di
 - Repository implementati: `userRepository`, `gameRepository`, `moveRepository`
 ---
 
-###  Chain of Responsibility
-
-Implementato tramite i **middleware** di Express, per:
-- Validazione dei contenuti
-- Gestione ordinata del flusso delle richieste HTTP
-
----
-
 ###  Singleton
 
 Singleton è un design pattern creazionale che garantisce che una classe abbia una sola istanza e fornisce un punto di accesso globale a questa istanza. In Battleships viene utilizzato per la **connessione al database PostgreSQL**, garantendo che esista una sola istanza condivisa e riutilizzabile in tutta l’applicazione.
@@ -109,11 +101,27 @@ Singleton è un design pattern creazionale che garantisce che una classe abbia u
 ---
 
 ###  Factory
+Il Factory Pattern, o modello di fabbrica, è un pattern creazionale che fornisce un'interfaccia per creare oggetti. 
+Nel progetto è stata adottata una **errorFactory** per la gestione centralizzata degli errori. Questa classe si occupa di creare dinamicamente oggetti di errore sulla base dello status-codes, restituendo un messaggio di errore personalizzato. L'utilizzo di questo pattern consente: 
+- Centralizzare la creazione e la tipizzazione degli errori in un'unica posizione.
+- Facilità di estensione.
+- Aumenta la flessibilità e la manutenibilità del codice.
 
-Implementa una **Error Factory** per la costruzione di oggetti di errore coerenti in base allo status code HTTP.  
-Gli errori generati vengono gestiti da un `errorHandler` centralizzato.
+L'errore generato dalla factory viene poi gestito da un middleware `errorHandler`, che intercetta tutte le eccezioni emerse durante l’elaborazione delle richieste e restituisce una risposta HTTP strutturata al client.
 
 ---
+
+###  Chain of Responsibility
+Il Chain of Responsibility Pattern è un pattern comportamentale che permette di passare una richiesta attraverso una catena di oggetti riceventi o **handlers**. Ogni handler decide se gestire la richiesta o passarla direttamente al componente successivo della catena. Questo pattern è stato applicato in Battleship tramite il sistema di **middleware** offerto da Express.js. I middleware sono funzioni intermedie che vengono eseguite in sequenza quando una richiesta HTTP viene ricevuta. Sono state utilizzate per implementare le seguenti logiche: 
+- Validazione dei parametri e del body delle richieste,
+- Autenticazione e autorizzazione JWT, per proteggere le rotte e verificare i ruoli utente,
+- Gestione degli errori, intercettando e inoltrando le eccezioni all’errorHandler.
+
+Middleware presenti in Battleships: `adminValidator`, `loginValidator`, `gameValidator`, `moveValidator`, `ErrorHandler`, `jwtAuth`, 
+
+---
+
+###  Diagramma E-R
 
 ![Descrizione dell'immagine](./mermaid/login.svg)
 ![Descrizione dell'immagine](./mermaid/addToken.svg)
