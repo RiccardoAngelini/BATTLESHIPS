@@ -1,5 +1,5 @@
 
-
+//interfaccia dao che definisce le crud
 export interface IDao<TModel, TCreate, TUpdate = Partial<TModel>> {
 
     get(...ids: string[]): Promise<TModel | null>;

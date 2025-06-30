@@ -95,30 +95,6 @@ if (battle.current_turn_user !== playerId) {
   }
 }
 
-/*// dopo recordMove e reducePlayerToken... TROPPI UPDATE
-// calcola qui se ho vinto:
-const hasWon = this.checkIfPlayerHasWon(gridOpponent);
-
-// raccogli i dati da aggiornare
-const updateData: Partial<gameAttributes> = {
-  [gridKeyToUpdate]: gridOpponent,
-  current_turn_user: nextPlayer,
-};
-
-if (hasWon) {
-  updateData.winner_id = playerId;
-  updateData.state = 'FINISHED';
-}
-
-// un’unica chiamata
-await this.gameRepository.updateGame(battle, updateData);
-
-// poi, se serve, lancia l’IA
-if (battle.opponent_id === null && nextPlayer === null) {
-  await this.doAIMove({ ...battle, ...updateData } as game);
-}
-
-*/
   return move;
 }
 

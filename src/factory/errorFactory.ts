@@ -1,9 +1,9 @@
 import { StatusCodes } from "./Status_codes";
-
+//interfaccia per gli errori
 interface ErrorMsg{
      getMsg():{ statusCode: StatusCodes; message: string };
 }
-
+//implementazione delle varie classi di errori che verranno gestite dalla factory
 class GenericError implements ErrorMsg {
     getMsg() {
      return {
@@ -68,7 +68,7 @@ enum ErrEnum {
     BadRequest, 
     UnauthorizedRequest
 }*/
-
+//error factory che restituisce un istanza delle classi error in base allo status code
 export class ErrorFactory{
     constructor(){}
     getError(type_error:StatusCodes):ErrorMsg{

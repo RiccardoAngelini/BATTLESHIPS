@@ -2,14 +2,11 @@ import { Moves, MovesCreationAttributes } from "../models/moves";
 import { IDao } from "./IDao";
 
 export class MoveDao implements IDao<Moves,MovesCreationAttributes>{
-    
+    //restituisce tutte le moves di un game
    async getAllMoves(id: string): Promise<Moves[]> {
   try {
-    console.log('🔍 DAO.getAllMoves: cerca tutte le mosse di gameId=', id);
     return await Moves.findAll({
       where: { gameId: id },
-      // questo ti stamperà in console la query esatta generata
-      logging: console.log
     });
   } catch (err) {
     console.error('DAO.getAllMoves SQL error:', err);
@@ -17,7 +14,7 @@ export class MoveDao implements IDao<Moves,MovesCreationAttributes>{
   }
 }
 
-    
+    //crea una move
    async createMove(data: MovesCreationAttributes): Promise<Moves> {
    return await Moves.create(data);
 }

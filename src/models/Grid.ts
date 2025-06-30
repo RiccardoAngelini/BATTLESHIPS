@@ -1,12 +1,13 @@
+// Tipi per lo stato di ogni cella della griglia
 type CellState = 'empty' | 'boat' | 'hit'  ;
-
+// Rappresenta una singola barca con posizioni, colpi subiti e stato affondato
 export interface Boat {
   id: number;
   positions: Array<{ row: number; col: number }>;
   hits: number;
   sunk: boolean;
 }
-
+// Definizione della griglia di gioco
 export interface Grid {
   size: number;
   cells: CellState[][];
@@ -14,7 +15,7 @@ export interface Grid {
   boatNumber: number;
   placedBoats: Boat[];
 }
-
+// Classe che genera e gestisce la griglia di battaglia navale
 export class BattleshipGrid {
   private grid: Grid;
 
@@ -25,7 +26,7 @@ export class BattleshipGrid {
     if (maxRequiredSpace > totalSpace) {
       throw new Error("Spazio insufficiente per posizionare tutte le barche.");
     }
-
+// Inizializza la griglia vuota
     this.grid = {
       size: gridSize,
       cells: Array(gridSize).fill(null).map(() => Array(gridSize).fill('empty')),
@@ -36,7 +37,7 @@ export class BattleshipGrid {
 
     this.placeBoats();
   }
-
+//Posiziona tutte le barche in modo orizzontale, evitando sovrapposizioni
   private placeBoats(): void {
     let boatIndex = 0;
 /*let attempts = 0;
@@ -55,7 +56,7 @@ if (attempts === maxAttempts) {
     while (boatIndex < this.grid.boatNumber) {
       const x = Math.floor(Math.random() * this.grid.size);
       const y = Math.floor(Math.random() * (this.grid.size - this.grid.boatSizes + 1));
-
+   // Se nello spazio selezionato non ci sono altre barche, posiziona
       if (this.canPlaceBoat(x, y)) {
         const boatPosition: Array<{ row: number; col: number }> = [];
 
@@ -75,7 +76,7 @@ if (attempts === maxAttempts) {
       }
     }
   }
-
+//Controlla se la barca di lunghezza boatSizes può essere posizionata a partire da (x,y)
   private canPlaceBoat(x: number, y: number): boolean {
     for (let j = 0; j < this.grid.boatSizes; j++) {
       if (this.grid.cells[x][y + j] !== 'empty') {

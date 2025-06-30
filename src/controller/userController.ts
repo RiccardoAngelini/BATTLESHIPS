@@ -11,9 +11,9 @@ export class UserController{
   login = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { email } = req.body;
-      console.log('BODY:', req.body);
+     // console.log('BODY:', req.body);
       const token = await this.authService.authenticate(email);
-      return res.status(200).json({ token });
+      return res.status(StatusCodes.OK).json({ token });
     } catch (err) {
        next(err);
     }
@@ -25,7 +25,7 @@ export class UserController{
       const { email, token } = req.body;
 
     const player= await this.userService.addToken(adminId, email, token);
-    return res.status(200).json(player);
+    return res.status(StatusCodes.OK).json(player);
     } catch (err) {
       next(err);
     }
