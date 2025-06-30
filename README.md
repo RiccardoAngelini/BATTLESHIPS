@@ -487,6 +487,28 @@ Risposta attesa
     "turnNumber": 2
   }
 ] </pre>
+---
+# Configurazione ambiente 
+Prima di avviare l’applicazione, crea un file **.env** nella root del progetto e definisci le seguenti variabili di ambiente:
+<pre>
+DB_HOST=
+DB_PORT=
+DB_USER=
+DB_NAME=
+APP_PORT=
+</pre>
+### JWT (simmetrico – HS256) Secret condiviso per firmare e verificare i token JWT.
+JWT_SECRET=your-very-secure-secret, 
+JWT_EXPIRES_IN=1h
+
+### Avvio con docker
+Assicurati di avere in progetto questi file opportunamente configurati, per la definizione dei servizi e la costruzione dell'immagine e del container in Docker:
+Dockerfile, 
+docker-compose.yaml.
+
+Una volta creato e popolate le variabili nel .env, per avviare l'applicazione su un container in Docker esegui:
+<pre> docker compose up --build </pre>
+
 
 ## 👨‍💻 Autore
 
