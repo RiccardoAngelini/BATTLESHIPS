@@ -210,7 +210,7 @@ turnNumber           → Numero del turno (incrementale)
 
 ---
 
-#### POST /auth/login**
+#### POST /auth/login
 
 Effettua il login di un utente tramite email e restituisce un token <JWT>
  #### Parametri
