@@ -123,6 +123,41 @@ Middleware presenti in Battleships: `adminValidator`, `loginValidator`, `gameVal
 
 ###  Diagramma E-R
 
+![Schema ER](./mermaid/schema-er.png)
+<pre>
+ PLAYER
+---------
+id            (PK)   → Identificativo univoco del giocatore
+name                 → Nome del giocatore
+email                → Email (univoca)
+role                 → Ruolo ('USER', 'ADMIN')
+tokens               → Token disponibili
+score                → Punteggio totale del giocatore
+
+ GAME
+--------
+id             (PK)  → Identificativo univoco della partita
+type                 → Tipo partita ('PVP' / 'PVE')
+state                → Stato della partita ('ONGOING', 'FINISHED', 'ABANDONED')
+current_turn_user    → ID del giocatore a cui spetta la mossa
+creator_id     (FK)  → Riferimento al giocatore che ha creato la partita
+opponent_id    (FK)  → Riferimento all'avversario (utente o IA)
+leaver_id      (FK)  → Giocatore che ha abbandonato la partita (se presente)
+grid_creator         → Griglia di gioco del creatore (serializzata)
+grid_opponent        → Griglia di gioco dell’avversario (serializzata)
+winner_id      (FK)  → Giocatore vincente (se presente)
+
+ MOVES
+---------
+id             (PK)  → Identificativo della mossa
+gameId         (FK)  → Riferimento alla partita
+playerId       (FK)  → Giocatore che ha effettuato la mossa
+x                    → Coordinata X (colonna)
+y                    → Coordinata Y (riga)
+result               → Esito della mossa ('hit', 'miss', 'water)
+turnNumber           → Numero del turno (incrementale)
+</pre>
+
 ![Descrizione dell'immagine](./mermaid/login.svg)
 ![Descrizione dell'immagine](./mermaid/addToken.svg)
 ![Descrizione dell'immagine](./mermaid/ranking.svg)
