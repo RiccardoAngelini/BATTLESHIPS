@@ -14,7 +14,7 @@ export class AuthService {
    */
   async authenticate(email: string): Promise<string> {
     const user = await this.userRepository.getByEmail(email);
-    if (!user) throw errorFactory.getError(StatusCodes.UNAUTHORIZED);
+    if (!user)  throw errorFactory.getError(StatusCodes.UNAUTHORIZED);
     
     const payload = { id: user.id, email: user.email, role: user.role };
     return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });

@@ -12,6 +12,7 @@ class UserService {
         const ranking = await this.userRepository.getUserRanking();
         return ranking.map(p => ({ name: p.name ?? '', score: p.score ?? 0 }));
     }
+    //funzione che consente all'utente con ruolo admin di assegnare token (credito) all'utente inserendo l'email
     async addToken(adminID, email, token) {
         const admin = await this.userRepository.getById(adminID);
         const player = await this.userRepository.getByEmail(email);

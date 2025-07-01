@@ -3,13 +3,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoveDao = void 0;
 const moves_1 = require("../models/moves");
 class MoveDao {
+    //restituisce tutte le moves di un game
     async getAllMoves(id) {
         try {
-            console.log('🔍 DAO.getAllMoves: cerca tutte le mosse di gameId=', id);
             return await moves_1.Moves.findAll({
                 where: { gameId: id },
-                // questo ti stamperà in console la query esatta generata
-                logging: console.log
             });
         }
         catch (err) {
@@ -17,6 +15,7 @@ class MoveDao {
             throw err;
         }
     }
+    //crea una move
     async createMove(data) {
         return await moves_1.Moves.create(data);
     }

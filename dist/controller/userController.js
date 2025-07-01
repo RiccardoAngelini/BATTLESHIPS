@@ -9,9 +9,9 @@ class UserController {
         this.login = async (req, res, next) => {
             try {
                 const { email } = req.body;
-                console.log('BODY:', req.body);
+                // console.log('BODY:', req.body);
                 const token = await this.authService.authenticate(email);
-                return res.status(200).json({ token });
+                return res.status(Status_codes_1.StatusCodes.OK).json({ token });
             }
             catch (err) {
                 next(err);
@@ -22,7 +22,7 @@ class UserController {
                 const adminId = req.user.id;
                 const { email, token } = req.body;
                 const player = await this.userService.addToken(adminId, email, token);
-                return res.status(200).json(player);
+                return res.status(Status_codes_1.StatusCodes.OK).json(player);
             }
             catch (err) {
                 next(err);

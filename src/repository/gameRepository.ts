@@ -21,6 +21,8 @@ export class GameRepository {
   async updateGame(game:game,data: Partial<game>,):Promise<game>{
   return await this.gameDao.update(game, data);
   }
+
+  
  //elimina un game
   async deleteGame(game:game):Promise<void>{
   await this.gameDao.delete(game);

@@ -11,12 +11,11 @@ class MoveController {
             try {
                 const { id: gameId } = req.params;
                 const playerId = req.user.id;
-                console.log('BODY:', req.params.gameId);
-                console.log('ID', req.user.id);
+                // console.log('BODY:', req.params.gameId);
+                // console.log('ID',req.user.id );
                 const { x, y } = req.body;
-                // ricordati l’await!
                 const result = await this.moveService.doYourMove(gameId, playerId, x, y);
-                return res.status(200).json(result);
+                return res.status(Status_codes_1.StatusCodes.CREATED).json(result);
             }
             catch (err) {
                 console.error(' doYourMove error:', err);
@@ -27,10 +26,10 @@ class MoveController {
         this.getAllMoves = async (req, res, next) => {
             try {
                 const { id: gameId } = req.params;
-                console.log('BODY:', req.params.gameId);
-                console.log('ID', req.user.id);
+                //console.log('BODY:', req.params.gameId);
+                //console.log('ID',req.user.id );
                 const moves = await this.moveService.getAllMoves(gameId);
-                return res.status(200).json(moves);
+                return res.status(Status_codes_1.StatusCodes.OK).json(moves);
             }
             catch (err) {
                 return next(errorFactory_1.errorFactory.getError(Status_codes_1.StatusCodes.BAD_REQUEST));

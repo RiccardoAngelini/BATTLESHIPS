@@ -23,6 +23,6 @@ export class UserRepository {
   }
 
   async save(player: player): Promise<player> {
-    return await player.save();
+    return await this.userDao.save(player);
   }
 }

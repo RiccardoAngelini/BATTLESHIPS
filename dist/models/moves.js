@@ -47,6 +47,7 @@ class Moves extends sequelize_1.Model {
             sequelize,
             tableName: 'Moves',
             schema: 'public',
+            timestamps: false,
             indexes: [
                 {
                     name: "Moves_pkey",

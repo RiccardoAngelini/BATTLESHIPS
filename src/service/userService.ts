@@ -19,7 +19,7 @@ import { UserRepository } from "../repository/userRepository";
     const player = await this.userRepository.getByEmail(email);
 
     if (!admin || admin.role !== 'ADMIN') {
-   throw errorFactory.getError(StatusCodes.UNAUTHORIZED);
+     throw errorFactory.getError(StatusCodes.UNAUTHORIZED);
     }
 
     if (!player) {

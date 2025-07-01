@@ -34,5 +34,8 @@ export class UserDao implements IDao<player,playerCreationAttributes>{
     async delete(player: player): Promise<void> {
         return await player.destroy();
     }
+     async save(player: player): Promise<player> {
+    return await player.save();
+  }
 
 }

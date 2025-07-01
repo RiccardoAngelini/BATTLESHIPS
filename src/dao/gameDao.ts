@@ -31,6 +31,8 @@ export class GameDao implements IDao<game,gameCreationAttributes>{
     async update(game: game, data: Partial<game>): Promise<game> {
         return await game.update(data);
     }
+
+    
     //elimina un game
     async delete(game: game): Promise<void> {
         return game.destroy()

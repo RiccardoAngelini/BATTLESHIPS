@@ -52,7 +52,7 @@ export class GameController{
       const {abandoned}=req.body
       // console.log('BODY:', req.body);
       // console.log('ID',req.user.id );
-         if (abandoned !== 'abandoned') {
+         if (abandoned !== "abandoned") {
       return res
         .status(StatusCodes.BAD_REQUEST)
         .json({ error: 'You must insert "abandoned" to left the game.' });

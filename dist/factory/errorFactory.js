@@ -1,83 +1,26 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.errorFactory = exports.ErrorFactory = void 0;
+const httpError_1 = require("./httpError");
 const Status_codes_1 = require("./Status_codes");
-class GenericError {
-    getMsg() {
-        return {
-            statusCode: Status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR,
-            message: "This is a generic error"
-        };
-    }
-}
-class UnauthorizedRequest {
-    getMsg() {
-        return {
-            statusCode: Status_codes_1.StatusCodes.UNAUTHORIZED,
-            message: "The authentication credentials are missing, or if supplied are not valid or not sufficient to access the resource."
-        };
-    }
-}
-class InvalidRequest {
-    getMsg() {
-        return {
-            statusCode: Status_codes_1.StatusCodes.NOT_FOUND,
-            message: "The URI requested is invalid or the resource requested does not exists."
-        };
-    }
-}
-class RefusedRequest {
-    getMsg() {
-        return {
-            statusCode: Status_codes_1.StatusCodes.FORBIDDEN,
-            message: "The request has been refused. See the accompanying message for the specific reason (most likely for exceeding rate limit)"
-        };
-    }
-}
-class DeleteRequest {
-    getMsg() {
-        return {
-            statusCode: Status_codes_1.StatusCodes.NO_CONTENT,
-            message: "Resource successfully deleted"
-        };
-    }
-}
-class BadRequest {
-    getMsg() {
-        return {
-            statusCode: Status_codes_1.StatusCodes.BAD_REQUEST,
-            message: "The request could not be understood or was missing required parameters"
-        };
-    }
-}
-/*
-enum ErrEnum {
-    None,
-    Generic,
-    RefusedRequest,
-    InvalidRequest,
-    DeleteRequest,
-    BadRequest,
-    UnauthorizedRequest
-}*/
+//error factory che restituisce un istanza delle classi error in base allo status code
 class ErrorFactory {
-    constructor() { }
     getError(type_error) {
         switch (type_error) {
             case Status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR:
-                return new GenericError();
+                return new httpError_1.HttpError(type_error, "This is a generic error");
             case Status_codes_1.StatusCodes.NOT_FOUND:
-                return new InvalidRequest();
+                return new httpError_1.HttpError(type_error, "The resource requested does not exist.");
             case Status_codes_1.StatusCodes.UNAUTHORIZED:
-                return new UnauthorizedRequest();
+                return new httpError_1.HttpError(type_error, "The authentication credentials are missing or not valid.");
             case Status_codes_1.StatusCodes.FORBIDDEN:
-                return new RefusedRequest();
+                return new httpError_1.HttpError(type_error, "The request has been refused (e.g. rate limit exceeded).");
             case Status_codes_1.StatusCodes.NO_CONTENT:
-                return new DeleteRequest();
+                return new httpError_1.HttpError(type_error, "Resource successfully deleted.");
             case Status_codes_1.StatusCodes.BAD_REQUEST:
-                return new BadRequest();
+                return new httpError_1.HttpError(type_error, "The request could not be understood or is missing required parameters.");
             default:
-                return new GenericError();
+                return new httpError_1.HttpError(Status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR, "This is a generic error");
         }
     }
 }

@@ -64,7 +64,7 @@ constructor(
       if (opponent) await this.userRepository.save(opponent)
   }
    return battle;
-}else throw errorFactory.getError(StatusCodes.UNAUTHORIZED);
+}else   throw errorFactory.getError(StatusCodes.UNAUTHORIZED);
 
   } catch (err) {
     throw errorFactory.getError(StatusCodes.INTERNAL_SERVER_ERROR);
@@ -103,7 +103,7 @@ constructor(
      if(battle.state==='ONGOING' && abandoned==="abandoned"){
 
     const winnerId = playerId === battle.creator_id ? battle.opponent_id : battle.creator_id;
-
+    //console.log('Before update:', battle.winner_id);
     const updateBattle = await this.gameRepository.updateGame(
     battle,
     {
@@ -111,6 +111,7 @@ constructor(
     state: 'ABANDONED',
     }
   );
+ // console.log('Updating winner_id to', winnerId)
 
 if (winnerId) {
   const winner = await this.userRepository.getById(winnerId);

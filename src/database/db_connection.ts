@@ -17,11 +17,11 @@ import { initModels } from "../models/init-models";
       const dbName = process.env.DB_NAME || "postgres" as string;
       const dbUser = process.env.DB_USER || "postgres" as string;
       const dbPassword = process.env.DB_PASSWORD || "postgres";
-      const dbHost = process.env.DB_HOST;
+      const dbHost = process.env.DB_HOST || "localhost";
       DbConnection.sequelize = new Sequelize(dbName, dbUser, dbPassword, {
         host: dbHost,
         dialect: 'postgres',
-        logging:false // Disabilita i log SQL
+       logging: console.log  // Disabilita i log SQL
       });
 
       try {

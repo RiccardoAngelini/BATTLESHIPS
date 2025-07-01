@@ -5,9 +5,11 @@ class MoveRepository {
     constructor(moveDao) {
         this.moveDao = moveDao;
     }
+    //crea una mossa
     async createMove(data) {
         return await this.moveDao.createMove(data);
     }
+    //restituisce tutte le mosse da un gameId
     async getAllMoves(id) {
         return await this.moveDao.getAllMoves(id);
     }
