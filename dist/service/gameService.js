@@ -83,17 +83,19 @@ class GameService {
             throw new Error('Player not part of this game');
         if (battle.state === 'ONGOING' && abandoned === "abandoned") {
             const winnerId = playerId === battle.creator_id ? battle.opponent_id : battle.creator_id;
-            console.log('Before update:', battle.winner_id);
+            //console.log('Before update:', battle.winner_id);
             const updateBattle = await this.gameRepository.updateGame(battle, {
                 winner_id: winnerId,
                 state: 'ABANDONED',
             });
-            console.log('Updating winner_id to', winnerId);
+            // console.log('Updating winner_id to', winnerId)
             if (winnerId) {
                 const winner = await this.userRepository.getById(winnerId);
                 if (winner) {
-                    winner.score += 0.75;
-                    await this.userRepository.save(winner);
+                    const newScore = winner.score += 0.75;
+                    await this.userRepository.update(winner, {
+                        score: newScore
+                    });
                 }
             }
             return updateBattle;

@@ -14,14 +14,16 @@ export interface JwtPayload {
 
 export const jwtAuth = ( req: Request, res: Response, next: NextFunction) => {
   console.log(' [jwtAuth] headers:', req.headers);
+  // Ottieni header Authorization e verifica formato bearer
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
     return res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Missing or malformed Authorization header' });
   }
   const token = authHeader.split(' ')[1];
   try {
+    // Verifica firma e decodifica payload
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-     console.log('✅ [jwtAuth] payload:', decoded);
+     console.log(' [jwtAuth] payload:', decoded);
     req.user = { id: decoded.id, email: decoded.email, role: decoded.role };
     console.log('jwtAuth: user è', req.user);
     next();

@@ -20,7 +20,7 @@ app.use('/api', moveRouter);
 
 
 DbConnection.init();
-
+app.use(errHandler);
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`)
 })

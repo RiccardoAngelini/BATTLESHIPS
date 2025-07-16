@@ -116,8 +116,12 @@ constructor(
 if (winnerId) {
   const winner = await this.userRepository.getById(winnerId);
   if (winner) {
-    winner.score += 0.75;
-    await this.userRepository.save(winner);
+    const newScore = winner.score += 0.75;
+    await this.userRepository.update(winner,
+      {
+        score:newScore
+      }
+    );
   }
 }
 return updateBattle;
@@ -125,5 +129,4 @@ return updateBattle;
      }else throw new Error('Game is already finished')
  }
   
-
 }

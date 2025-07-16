@@ -18,7 +18,10 @@ class UserRepository {
         return await this.userDao.getAll();
     }
     async save(player) {
-        return await player.save();
+        return await this.userDao.save(player);
+    }
+    async update(player, data) {
+        return await this.userDao.update(player, data);
     }
 }
 exports.UserRepository = UserRepository;

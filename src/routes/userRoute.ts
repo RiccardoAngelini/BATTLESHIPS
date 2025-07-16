@@ -6,6 +6,7 @@ import { UserService } from '../service/userService';
 import { validateAddToken } from '../middleware/adminValidator';
 import { jwtAuth } from '../middleware/jwtAuth';
 import { AuthService } from '../service/authService';
+import { validateEmail } from '../middleware/loginValidator';
 
 const userDao=new UserDao();
 const userRepository=new UserRepository(userDao);
@@ -18,6 +19,6 @@ const userRouter: Router = Router();
 userRouter.get('/players', userController.getPlayers);
 userRouter.get('/ranking', userController.getRanking);
 userRouter.post('/tokens',jwtAuth ,validateAddToken,userController.addToken);
-userRouter.post('/auth/login',userController.login);
+userRouter.post('/auth/login',validateEmail, userController.login);
 
 export default userRouter;

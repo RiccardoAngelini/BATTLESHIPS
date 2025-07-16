@@ -14,6 +14,7 @@ export class HttpError extends Error {
     this.statusCode = statusCode;
     // Necessario per mantenere la corretta catena di prototipi
     // e fare in modo che 'instanceof HttpError' funzioni
-    Object.setPrototypeOf(this, HttpError.prototype);
+    //setta il prototipo dell'oggetto corrente all'oggetto httpError
+    Object.setPrototypeOf(this, HttpError.prototype); 
   }
 }

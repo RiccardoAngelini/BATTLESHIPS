@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const ErrorHandler_1 = require("./middleware/ErrorHandler");
 const db_connection_1 = __importDefault(require("./database/db_connection"));
 const gameRoute_1 = __importDefault(require("./routes/gameRoute"));
 const moveRoute_1 = __importDefault(require("./routes/moveRoute"));
@@ -18,6 +19,7 @@ app.use('/api', userRoute_1.default);
 app.use('/api', gameRoute_1.default);
 app.use('/api', moveRoute_1.default);
 db_connection_1.default.init();
+app.use(ErrorHandler_1.errHandler);
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });

@@ -1,6 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.errHandler = errHandler;
+const errorFactory_1 = require("../factory/errorFactory");
+const httpError_1 = require("../factory/httpError");
+const Status_codes_1 = require("../factory/Status_codes");
 /*
 export function errHandler(err: any, req: Request, res: Response, next: NextFunction) {
   const statusCode = err.statusCode || 500;
@@ -10,8 +13,20 @@ export function errHandler(err: any, req: Request, res: Response, next: NextFunc
 }*/
 // Middleware centralizzato per la gestione degli errori
 function errHandler(err, req, res, next) {
-    // HttpError espone statusCode e message, fallback a 500 e messaggio generico
-    const status = err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-    res.status(status).json({ error: message });
+    if (err instanceof httpError_1.HttpError) {
+        const code = err.statusCode || 500;
+        return res.status(code).json({
+            error: {
+                status: code,
+                message: err.message,
+            },
+        });
+    }
+    const genericError = errorFactory_1.errorFactory.getError(Status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR);
+    return res.status(genericError.statusCode).json({
+        error: {
+            status: genericError.statusCode,
+            message: genericError.message,
+        },
+    });
 }

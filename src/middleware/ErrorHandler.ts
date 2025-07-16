@@ -1,5 +1,7 @@
 import { errorFactory } from "../factory/errorFactory";
 import { Request, Response, NextFunction } from "express";
+import { HttpError } from "../factory/httpError";
+import { StatusCodes } from "../factory/Status_codes";
 
 /*
 export function errHandler(err: any, req: Request, res: Response, next: NextFunction) {
@@ -10,10 +12,23 @@ export function errHandler(err: any, req: Request, res: Response, next: NextFunc
 }*/
 
 // Middleware centralizzato per la gestione degli errori
-export function errHandler(err: any, req: Request, res: Response, next: NextFunction) {
-  // HttpError espone statusCode e message, fallback a 500 e messaggio generico
-  const status = err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
+export function errHandler(err: unknown, req: Request, res: Response, next: NextFunction) {
 
-  res.status(status).json({ error: message });
+  if(err instanceof HttpError){
+    const code = err.statusCode || 500
+ return res.status(code).json({
+      error: {
+        status: code,
+        message: err.message,
+      },
+    });
+  }
+
+  const genericError = errorFactory.getError(StatusCodes.INTERNAL_SERVER_ERROR);
+  return res.status(genericError.statusCode).json({
+    error: {
+      status: genericError.statusCode,
+      message: genericError.message,
+    },
+  });
 }

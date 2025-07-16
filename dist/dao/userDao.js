@@ -34,5 +34,8 @@ class UserDao {
     async delete(player) {
         return await player.destroy();
     }
+    async save(player) {
+        return await player.save();
+    }
 }
 exports.UserDao = UserDao;

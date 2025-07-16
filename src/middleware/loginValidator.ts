@@ -17,4 +17,3 @@ export function validateEmail( req: Request, res: Response, next: NextFunction) 
   }
   next(); 
 }
-module.exports = validateEmail;
