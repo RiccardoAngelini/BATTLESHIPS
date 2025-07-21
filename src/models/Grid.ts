@@ -1,3 +1,6 @@
+import { errorFactory } from "../factory/errorFactory";
+import { StatusCodes } from "../factory/Status_codes";
+
 // Tipi per lo stato di ogni cella della griglia
 type CellState = 'empty' | 'boat' | 'hit'  ;
 // Rappresenta una singola barca con posizioni, colpi subiti e stato affondato
@@ -24,7 +27,8 @@ export class BattleshipGrid {
     const maxRequiredSpace = boatSizes * boatNumber;
 
     if (maxRequiredSpace > totalSpace) {
-      throw new Error("Spazio insufficiente per posizionare tutte le barche.");
+      throw errorFactory.getError(StatusCodes.BAD_REQUEST, "Spazio insufficiente per posizionare tutte le barche.");
+      
     }
 // Inizializza la griglia vuota
     this.grid = {
@@ -40,19 +44,7 @@ export class BattleshipGrid {
 //Posiziona tutte le barche in modo orizzontale, evitando sovrapposizioni
   private placeBoats(): void {
     let boatIndex = 0;
-/*let attempts = 0;
-const maxAttempts = 1000;
 
-while (boatIndex < this.grid.boatNumber && attempts < maxAttempts) {
-  attempts++;
-  // ...
-}
-
-if (attempts === maxAttempts) {
-  throw new Error("Impossibile posizionare tutte le barche dopo molti tentativi.");
-}
-
-*/
     while (boatIndex < this.grid.boatNumber) {
       const x = Math.floor(Math.random() * this.grid.size);
       const y = Math.floor(Math.random() * (this.grid.size - this.grid.boatSizes + 1));

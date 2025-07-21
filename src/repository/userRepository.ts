@@ -7,9 +7,12 @@ export class UserRepository {
    constructor(private userDao: UserDao){}
   
 
-
   async getUserRanking(): Promise<player[]> {
     return await this.userDao.getRanking();
+  }
+
+  async getAi():Promise<player | null>{
+    return await this.userDao.getAi();
   }
 
   

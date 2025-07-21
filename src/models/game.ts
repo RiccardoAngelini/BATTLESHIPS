@@ -9,7 +9,7 @@ export interface gameAttributes {
   state: "ONGOING" | "FINISHED" | "ABANDONED";
   current_turn_user: string;
   creator_id: string;
-  opponent_id?: string| null;
+  opponent_id?: string;
   grid_creator: object;
   grid_opponent?: object;
   winner_id?: string | null ;
@@ -86,7 +86,12 @@ export class game extends Model<gameAttributes, gameCreationAttributes> implemen
       },
       opponent_id: {
         type: DataTypes.UUID,
-        allowNull: true
+        //allowNull: true QUI CAMBIO PUO DARE ERRORE, in particolare se trova righe con id nullo va in errore quindi devi resettare il db forse
+        allowNull: false,
+        references: {
+          model: 'player',
+          key: 'id'
+        }
       },
       grid_creator: {
         type: DataTypes.JSONB,

@@ -3,6 +3,8 @@ import { player, playerAttributes, playerCreationAttributes } from "../models/pl
 import { IDao } from "./IDao";
 
 export class UserDao implements IDao<player,playerCreationAttributes>{
+    //variabile di sola lettura dell'email dell'ai 
+    private readonly AI_EMAIL = 'ai@example.com';
    //ritorna un player dall'id
     async get(id: string): Promise<player | null> {
         return await player.findByPk(id);
@@ -15,7 +17,12 @@ export class UserDao implements IDao<player,playerCreationAttributes>{
     async getByEmail(email:string): Promise < player |null>{
     return await player.findOne({where: {email}});
     }
-//ritorna la classifica dei player in base allo score in modo decrescente
+    //ritorna il player AI
+    async getAi():Promise<player |null>{
+        return await player.findOne({where: {email:this.AI_EMAIL}});
+   }
+    
+    //ritorna la classifica dei player in base allo score in modo decrescente
     async getRanking():Promise<player[]>{
         return await player.findAll({
             order:[['score','DESC']],

@@ -50,18 +50,16 @@ export class GameController{
       const { id:gameId } = req.params;
       const playerId = req.user.id;
       const {abandoned}=req.body
-      // console.log('BODY:', req.body);
-      // console.log('ID',req.user.id );
          if (abandoned !== "abandoned") {
       return res
         .status(StatusCodes.BAD_REQUEST)
         .json({ error: 'You must insert "abandoned" to left the game.' });
     }
 
-      await this.gameService.abandonedGame(gameId, playerId,abandoned); 
+     const battle = await this.gameService.abandonedGame(gameId, playerId,abandoned); 
       return res
         .status(StatusCodes.OK)
-        .send();
+        .json({  battle });
 
     } catch (err) {
       next(err);

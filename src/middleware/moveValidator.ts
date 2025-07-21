@@ -16,16 +16,16 @@ export function validateDoYourMove(
   // x e y nel body
   const { x, y } = req.body;
 
-  if (!x) {
+  if (x === undefined || x === null) {
     return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Field "x" is required.' });
   } else if (typeof x !== 'number' || !Number.isInteger(x) || x < 0) {
-   return res.status(StatusCodes.BAD_REQUEST).json({  error: 'Field "x" must be a non-negative integer.'});
+   return res.status(StatusCodes.BAD_REQUEST).json({  error: 'Field "x" must be a non-negative number.'});
   }
 
-  if (!y) {
+  if (y === undefined || y === null) {
    return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Field "y" is required.' }); 
   } else if (typeof y !== 'number' || !Number.isInteger(y) || y < 0) {
-     return res.status(StatusCodes.BAD_REQUEST).json({  error: 'Field "y" must be a non-negative integer.'});
+     return res.status(StatusCodes.BAD_REQUEST).json({  error: 'Field "y" must be a non-negative number.'});
   }
 
   next();

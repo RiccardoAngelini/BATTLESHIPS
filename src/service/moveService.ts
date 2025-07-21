@@ -1,4 +1,6 @@
 
+import { errorFactory } from "../factory/errorFactory";
+import { StatusCodes } from "../factory/Status_codes";
 import { game, gameAttributes } from "../models/game";
 import { Boat, Grid } from "../models/Grid";
 import { Moves } from "../models/moves";
@@ -32,27 +34,27 @@ constructor(
 ): Promise<Moves> {
   //verifica che il game esiste
   const battle = await this.gameRepository.getById(gameId);
-  if (!battle) throw new Error('Game not found');
+  if (!battle) throw errorFactory.getError(StatusCodes.BAD_REQUEST, "Game not found");
 
   // Verifica che il player sia uno dei due partecipanti
   const isCreator = playerId === battle.creator_id;
   const isOpponent = playerId === battle.opponent_id;
-  if (!isCreator && !isOpponent) throw new Error('Player not part of this game');
+  if (!isCreator && !isOpponent) throw errorFactory.getError(StatusCodes.BAD_REQUEST, "Player not part of this game");
 
   //verifica se c'è un già un vincitore
   if (battle.winner_id) {
-  throw new Error('Game already finished');
+  throw errorFactory.getError(StatusCodes.BAD_REQUEST, "Game already finished");;
 }
 //verifica di quale player è il turno
 if (battle.current_turn_user !== playerId) {
-  throw new Error('Not your turn');
+ throw errorFactory.getError(StatusCodes.BAD_REQUEST, " Not your turn");;
 }
   // Verifica di chi è la griglia da aggiornare
  const gridKeyToUpdate = isCreator ? 'grid_opponent' : 'grid_creator';
  //calcola il prossimo giocatore 
  const nextPlayer = isCreator ? battle.opponent_id : battle.creator_id;
 
- const gridOpponent = this.getGridTarget(battle, playerId);
+ const gridOpponent = await this.getGridTarget(battle, playerId);
   
  await this.validateCoordinates(gridOpponent, x, y);
     // Applica la mossa
@@ -87,16 +89,17 @@ if (battle.current_turn_user !== playerId) {
 }
 
   //carica la nuova battaglia con i nuovi dati per verificare se il prossimo turno è dell'ia
-  const updateBattle= await this.gameRepository.getById(gameId);
-  if(updateBattle){
-   // Se l'avversario è IA (opponent_id === null), lancia subito la sua mossa
- if (updateBattle.opponent_id === null && nextPlayer === null) {
-    await this.doAIMove(updateBattle);
+  // const updateBattle= await this.gameRepository.getById(gameId); lo tolgo perche ridondante
+  
+    const ai= await this.userRepository.getAi();
+   // Se l'avversario è IA, lancia la sua mossa 
+ if (ai && battle.current_turn_user === ai.id ) {
+    await this.doAIMove(battle);
+  
   }
-}
-
   return move;
 }
+
 
 
 //funzione che valuta se le coordinate inserite dall'utente rientrano nella grigia avversaria
@@ -105,7 +108,7 @@ private async validateCoordinates(grid: Grid, x: number, y: number) {
   const sizeY = grid.cells[0]?.length ?? 0;
 
   if (x < 0 || x >= sizeX || y < 0 || y >= sizeY) {
-    throw new Error(`Coordinate out of bounds`);
+   throw errorFactory.getError(StatusCodes.BAD_REQUEST, "Coordinate out of bounds");
   }
 }
 
@@ -120,17 +123,28 @@ private applyMove(
   let finalResult = result;
  
   if (result === HitResult.HIT && boat) {
-    boat.hits = (boat.hits ?? 0) + 1;
-    if (boat.hits === boat.positions.length) {
-      boat.sunk = true;
-      finalResult = HitResult.SUNK;
-    }
+    console.log("[applyMove] Colpita barca ID:", boat.id);
+    const updateBoats= grid.placedBoats.map((b)=>{
+      if(b.id===boat.id){
+            const hits = (b.hits ?? 0) + 1;
+        const sunk = hits === b.positions.length;
+        finalResult = sunk ? HitResult.SUNK : HitResult.HIT;
+        console.log(`[applyMove] Boat aggiornata - ID: ${b.id}, Hits: ${hits}, Sunk: ${sunk}`);
+        return { ...b, hits, sunk }; //copia tutte le proprietà dell'oggetto b e sovrascrive le vecchie
+      }
+      return b;
+    });
+
+    grid.placedBoats=updateBoats;
   }
 
   grid.cells[x][y] =
     finalResult === HitResult.HIT || finalResult === HitResult.SUNK
       ? 'hit'
       : 'empty';
+
+    console.log("[applyMove] Stato cella dopo:", grid.cells[x][y]);
+  console.log("[applyMove] Stato griglia aggiornato:", JSON.stringify(grid, null, 2));
 
   return finalResult;
 }
@@ -166,9 +180,10 @@ private async recordMove(
 
 
 //restituisce la griglia dell'avversario
- getGridTarget(battle: game, playerId: string|null): Grid {
-    // Caso PVE: opponent_id === null e sono l'IA (playerId === null)
-  if (battle.opponent_id === null && playerId === null) {
+  async getGridTarget(battle: game, playerId: string): Promise <Grid> {
+    // Caso PVE: 
+    const ai= await this.userRepository.getAi();
+  if (ai && battle.opponent_id === ai.id) {
     return battle.grid_creator as Grid;
   }
 //caso PVP 
@@ -177,7 +192,7 @@ private async recordMove(
     : battle.grid_creator;
 
   if (!target) {
-    throw new Error('Griglia non inizializzata');
+    throw errorFactory.getError(StatusCodes.BAD_REQUEST, "Grid not created");;
   }
   return target as Grid
 }
@@ -205,8 +220,14 @@ async reducePlayerToken(playerId:string):Promise<void>{
 
 //mossa dell'ia
 private async doAIMove(battle: game): Promise<void> {
+  //prendo l'AI player
+  const ai = await this.userRepository.getAi();
+  if(!ai) throw new Error('AI not found');
+
+  if (battle.state === 'FINISHED' || battle.winner_id) throw errorFactory.getError(StatusCodes.BAD_REQUEST, "Game already finished");;
+
   const gridKeyToUpdate = 'grid_creator'; // IA attacca il giocatore
- const gridOpponent = this.getGridTarget(battle, null);
+  const gridOpponent = await this.getGridTarget(battle, battle.creator_id);
 
   // Trova le celle non colpite, fare il check se truccato
   const validMoves: { x: number; y: number }[] = [];
@@ -219,7 +240,7 @@ private async doAIMove(battle: game): Promise<void> {
   }
 
   if (validMoves.length === 0) {
-  //  return "AI has no moves left!";
+  return 
   }
 
   // Mossa casuale
@@ -229,26 +250,26 @@ private async doAIMove(battle: game): Promise<void> {
   // Applica la mossa
  const finalResult = this.applyMove(gridOpponent, x, y);
  //salva la mossa
- await this.recordMove(battle.id, null, x, y, finalResult);
-
+ await this.recordMove(battle.id, ai.id, x, y, finalResult);
 
   const hasWon = this.checkIfPlayerHasWon(gridOpponent);
   if (hasWon) {
     await battle.update({
-      winner_id: null, // IA vincente
+      winner_id: ai.id, // IA vincente
       state: 'FINISHED',
       [gridKeyToUpdate]: gridOpponent,
     });
 
   //  return `AI sank your last ship! You lose.`;
   }
+// per debugging
+  console.log(JSON.stringify(gridOpponent, null, 2));
 
   await this.gameRepository.updateGame(battle, {
     [gridKeyToUpdate]: gridOpponent,
     current_turn_user: battle.creator_id, // Tocca di nuovo al player umano
   });
 
- // return finalResult === HitResult.WATER ? "AI:Miss!" : finalResult === HitResult.HIT ? "AI:Hit!" : "AI:Ship sunk!";
 }
 
 }

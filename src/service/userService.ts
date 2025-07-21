@@ -19,11 +19,11 @@ import { UserRepository } from "../repository/userRepository";
     const player = await this.userRepository.getByEmail(email);
 
     if (!admin || admin.role !== 'ADMIN') {
-     throw errorFactory.getError(StatusCodes.UNAUTHORIZED);
+     throw errorFactory.getError(StatusCodes.UNAUTHORIZED,"You aren't admin");
     }
 
     if (!player) {
-      throw new Error('Player not found');
+      throw errorFactory.getError(StatusCodes.BAD_REQUEST, "Player not found");;
     }
 
     player.tokens += token;

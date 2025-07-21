@@ -7,6 +7,7 @@ import { MoveRepository } from "../repository/moveRepository";
 import { UserRepository } from "../repository/userRepository";
 import { errorFactory } from "../factory/errorFactory";
 import { StatusCodes } from "../factory/Status_codes";
+import { HttpError } from "../factory/httpError";
 
 export class GameService{
 
@@ -27,17 +28,19 @@ constructor(
   try{
      // Recupero e controllo creator
     const creator = await this.userRepository.getById(creatorId);
-    if (!creator) throw new Error('Creator not found');
+    if (!creator) throw errorFactory.getError(StatusCodes.BAD_REQUEST, "Creator not found");;
 
     // Controllo token
     if(creator.tokens>0.20){
-      
-    // Se è PVP, cerco l’avversario in DB altrimenti è un PVE
-  let opponentId: string | null = null;
+ 
+ //NUOVO, recuper l'istanza di ai, se poi viene settato PVP lo cambia
+  const ai = await this.userRepository.getAi();
+  if (!ai) throw errorFactory.getError(StatusCodes.BAD_REQUEST, "AI not found");
+  let opponentId = ai.id;
   let message = 'Your opponent is AI';
   if (opponent_type === 'PVP') {
     const opponent = await this.userRepository.getByEmail(opponentEmail!);
-    if (!opponent) throw new Error(`Opponent with email ${opponentEmail} not found`);
+    if (!opponent) throw errorFactory.getError(StatusCodes.BAD_REQUEST,`Opponent with email ${opponentEmail} not found`);
     opponentId = opponent.id;
     message = `Your opponent is ${opponent.name}`;
   }
@@ -58,15 +61,16 @@ constructor(
 
   creator.tokens-=0.20; 
   await this.userRepository.save(creator);
-
-  if(opponent_type==='PVP'){
-      const opponent= await this.userRepository.getByEmail(opponentEmail!);
-      if (opponent) await this.userRepository.save(opponent)
-  }
+  // salva opponent, anche se IA 
+  const opponentToUpdate = await this.userRepository.getById(opponentId!);
+      if (opponentToUpdate) await this.userRepository.save(opponentToUpdate);
+  
    return battle;
-}else   throw errorFactory.getError(StatusCodes.UNAUTHORIZED);
+}else throw errorFactory.getError(StatusCodes.UNAUTHORIZED);
 
   } catch (err) {
+     if (err instanceof HttpError) throw err;
+    console.error('[createGameWithGrid] Unexpected error:', err);
     throw errorFactory.getError(StatusCodes.INTERNAL_SERVER_ERROR);
   }
 }
@@ -79,12 +83,12 @@ constructor(
   
      const battle = await this.gameRepository.getById(gameId);
      if(!battle){
-      throw new Error('Game not found');
+      throw errorFactory.getError(StatusCodes.BAD_REQUEST, "Game not found");
      }
        // Verifica che il player sia uno dei due partecipanti
      const isCreator = playerId === battle.creator_id;
      const isOpponent = playerId === battle.opponent_id;
-     if (!isCreator && !isOpponent) throw new Error('Player not part of this game');
+     if (!isCreator && !isOpponent) throw errorFactory.getError(StatusCodes.BAD_REQUEST, "Player not part of this game");
 
    return battle;
  }
@@ -94,15 +98,16 @@ constructor(
 
  const battle = await this.gameRepository.getById(gameId);
      if(!battle){
-      throw new Error('Game not found');
+       throw errorFactory.getError(StatusCodes.BAD_REQUEST, "Game not found");
      }
        // Verifica che il player sia uno dei due partecipanti
      const isCreator = playerId === battle.creator_id;
      const isOpponent = playerId === battle.opponent_id;
-     if (!isCreator && !isOpponent) throw new Error('Player not part of this game');
+     if (!isCreator && !isOpponent) throw errorFactory.getError(StatusCodes.BAD_REQUEST, "Player not part of this game");
      if(battle.state==='ONGOING' && abandoned==="abandoned"){
 
     const winnerId = playerId === battle.creator_id ? battle.opponent_id : battle.creator_id;
+ 
     //console.log('Before update:', battle.winner_id);
     const updateBattle = await this.gameRepository.updateGame(
     battle,
@@ -111,22 +116,28 @@ constructor(
     state: 'ABANDONED',
     }
   );
- // console.log('Updating winner_id to', winnerId)
+  
 
 if (winnerId) {
   const winner = await this.userRepository.getById(winnerId);
   if (winner) {
-    const newScore = winner.score += 0.75;
+     
+        const rawScore = typeof winner.score === 'string' ? parseFloat(winner.score) : winner.score;
+       const newScore = rawScore + 0.75;
+    
     await this.userRepository.update(winner,
       {
         score:newScore
       }
     );
-  }
+ 
+  }else {
+        console.warn(`[abandonedGame] Winner not found in DB (id: ${winnerId})`);
+      }
 }
 return updateBattle;
 
-     }else throw new Error('Game is already finished')
+     }else throw errorFactory.getError(StatusCodes.BAD_REQUEST , "Game already finished or invalid abandon flag");
  }
   
 }

@@ -99,9 +99,9 @@ export class player extends Model<playerAttributes, playerCreationAttributes> im
         defaultValue: 0.0
       },
       score: {
-        type: DataTypes.BIGINT,
+        type: DataTypes.DOUBLE,
         allowNull: false,
-        defaultValue: 0
+        defaultValue: 0.0
       },
 
     }, {

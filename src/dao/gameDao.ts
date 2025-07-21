@@ -28,7 +28,7 @@ export class GameDao implements IDao<game,gameCreationAttributes>{
         return await game.create(data);
     }
     //aggiorna un game
-    async update(game: game, data: Partial<game>): Promise<game> {
+    async update(game: game, data: Partial<gameCreationAttributes>): Promise<game> {
         return await game.update(data);
     }
 

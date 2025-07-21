@@ -18,7 +18,7 @@ export class GameRepository {
  return await this.gameDao.create(data);
   }
  //aggiorna un game
-  async updateGame(game:game,data: Partial<game>,):Promise<game>{
+  async updateGame(game:game,data: Partial<gameCreationAttributes>):Promise<game>{
   return await this.gameDao.update(game, data);
   }
 

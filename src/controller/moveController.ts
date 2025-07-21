@@ -23,9 +23,8 @@ export class MoveController {
       const { x, y } = req.body;
       const result = await this.moveService.doYourMove(gameId, playerId, x, y);
       return res.status(StatusCodes.CREATED).json(result);
-    } catch (err: any) {
-      console.error(' doYourMove error:', err);
-      return next(errorFactory.getError(StatusCodes.BAD_REQUEST));
+    }  catch (err) {
+      next(err);
     }
   };
 //funzione che definisce i parametri della rotta e ritorna tutte le mosse di una battaglia in json
@@ -36,12 +35,10 @@ public getAllMoves = async (
   ) => {
     try {
       const { id:gameId } = req.params;
-      //console.log('BODY:', req.params.gameId);
-       //console.log('ID',req.user.id );
       const moves = await this.moveService.getAllMoves(gameId);
       return res.status(StatusCodes.OK).json(moves);
-    } catch (err: any) {
-      return next(errorFactory.getError(StatusCodes.BAD_REQUEST));
+    }  catch (err) {
+      next(err);
     }
   };
 }
